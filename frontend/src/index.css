@@ -1,0 +1,48 @@
+/* tailwind.config.js or @import in your main CSS file */
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #f0f9f0;
+  --color-primary-100: #dcf2dd;
+  --color-primary-200: #bbe5be;
+  --color-primary-300: #8bd390;
+  --color-primary-400: #54bb5a;
+  --color-primary-500: #2d9934;
+  --color-primary-600: #1f7a26;
+  --color-primary-700: #1b5f20;
+  --color-primary-800: #14501b;
+  --color-primary-900: #0a400c;
+  
+  --color-sage-50: #f7f8f4;
+  --color-sage-100: #eef0e8;
+  --color-sage-200: #dde1d3;
+  --color-sage-300: #c4ccb4;
+  --color-sage-400: #a7b18e;
+  --color-sage-500: #819067;
+  --color-sage-600: #6b7955;
+  --color-sage-700: #555f46;
+  --color-sage-800: #464e3b;
+  --color-sage-900: #3c4232;
+  
+  --color-cream-50: #fefae0;
+  --color-cream-100: #fdf6c7;
+  --color-cream-200: #fbeb91;
+  --color-cream-300: #f7d951;
+  --color-cream-400: #f2c420;
+  --color-cream-500: #e2a00f;
+  --color-cream-600: #c37b0a;
+  --color-cream-700: #9b580c;
+  --color-cream-800: #804611;
+  --color-cream-900: #6c3a12;
+  
+  --color-neutral-50: #faf9f7;
+  --color-neutral-100: #f2f0eb;
+  --color-neutral-200: #e6e2d8;
+  --color-neutral-300: #d4cfc1;
+  --color-neutral-400: #b1ab86;
+  --color-neutral-500: #9c956f;
+  --color-neutral-600: #87805b;
+  --color-neutral-700: #726b4d;
+  --color-neutral-800: #5d5841;
+  --color-neutral-900: #4c4737;
+}
