@@ -1,4 +1,7 @@
 import nodemailer from 'nodemailer';
+import dotenv from "dotenv"
+
+dotenv.config()
 
 // Create a test account or replace with real credentials.
 const transporter = nodemailer.createTransport({

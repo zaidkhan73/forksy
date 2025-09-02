@@ -128,7 +128,7 @@ const sendOtp = async (req,res)=>{
             })
         }
 
-        const otp = Math.floor(1000 + Math.random() * 9000).toString()
+        const otp = Math.floor(100000 + Math.random() * 900000).toString()
 
         user.resetOtp = otp,
         user.otpExpires = Date.now()+5*60*1000
@@ -141,7 +141,7 @@ const sendOtp = async (req,res)=>{
     }
 }
 
-export const verifyOtp = async(req,res)=>{
+const verifyOtp = async(req,res)=>{
     try {
         const {email, otp} = req.body
 
@@ -155,7 +155,7 @@ export const verifyOtp = async(req,res)=>{
         user.isOtpVerified=true
         user.otpExpires=undefined
 
-        await User.save() 
+        await user.save() 
 
         return res.status(200).json({message:"otp verified successfully"})
 
@@ -164,11 +164,11 @@ export const verifyOtp = async(req,res)=>{
     }
 }
 
-export const resetPassword = async(req,res)=>{
+const resetPassword = async(req,res)=>{
     try {
         const {email, password} = req.body
 
-        const user = await User.findone({email})
+        const user = await User.findOne({email})
 
         if(!user || !user.isOtpVerified){
             return res.status(400).json({
@@ -181,12 +181,40 @@ export const resetPassword = async(req,res)=>{
         user.password = hashedPassword
         user.isOtpVerified=false
 
-        await User.save()
+        await user.save()
 
         return res.status(200).json({message:"password reset successfull"})
     } catch (error) {
         return res.status(500).json(`password reset failed ${error}`)
     }
+}
+
+const googleAuth = async (req,res)=>{
+    try {
+        const {fullName, email, mobile, role} = req.body
+    
+        let user = await User.findOne({email})
+    
+        if(!user){
+            user = await User.create({
+                fullName, email, mobile, role
+            })
+        }
+    
+        const token = await generateToken(user._id)
+        res.cookie("token", token,{
+            secure:false,
+            sameSite: "strict",
+            maxAge: 7*24*60*60*1000,
+            httpOnly: true
+        })
+    
+        return res.status(200).json(user)
+    } catch (error) {
+        return res.status(500).json(`google auth error ${error}`)
+
+    }
+
 }
 
 
@@ -196,5 +224,6 @@ export {
     signOut,
     sendOtp,
     verifyOtp,
-    resetPassword
+    resetPassword,
+    googleAuth
 }

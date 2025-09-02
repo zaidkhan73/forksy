@@ -24,7 +24,7 @@ const userSchema = mongoose.Schema({
     default: 'user'
   },
   resetOtp:{
-    type:string
+    type:String
   },
   isOtpVerified:{
     type:Boolean,
