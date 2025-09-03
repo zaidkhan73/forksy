@@ -1,13 +1,13 @@
 /* eslint-disable no-unused-vars */
-import React from "react";
 import { useState } from "react";
 import { IoMdEye } from "react-icons/io";
 import { IoMdEyeOff } from "react-icons/io";
-import { FcGoogle } from "react-icons/fc";
 import {useNavigate} from "react-router-dom";
 import axios from "axios";
 import { serverUrl } from "../App";
 import { ClipLoader } from "react-spinners"
+import { useDispatch } from "react-redux";
+import { setUserData } from "../../redux/userSlice";
 
 function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +19,7 @@ function SignUp() {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch()
 
   const handleSignUp = async () => {
     // Clear previous error message
@@ -46,7 +47,7 @@ function SignUp() {
         role
       },{withCredentials:true})
       
-      console.log(res);
+      dispatch(setUserData(res.data))
       
       // Handle successful signup here
       // For example: navigate to signin, show success message, etc.
@@ -54,25 +55,9 @@ function SignUp() {
     } catch (error) {
       console.log("error: ", error);
       
-      // Handle different error scenarios
-      if (error.response) {
-        // Server responded with error status
-        if (error.response.status === 409) {
-          setErrorMessage("User already exists");
-        } else if (error.response.status === 400) {
-          // Handle validation errors from backend
-          const errorData = error.response.data;
-          if (errorData.message) {
-            // Display the exact error message from backend
-            setErrorMessage(errorData.message);
-          } else {
-            setErrorMessage("Please check your input and try again");
-          }
-        } else if (error.response.status === 422) {
-          setErrorMessage("Invalid input data. Please check all fields");
-        } else {
-          setErrorMessage("Something went wrong. Please try again.");
-        }
+      // Use backend error message directly
+      if (error.response && error.response.data && error.response.data.message) {
+        setErrorMessage(error.response.data.message);
       } else if (error.request) {
         // Network error
         setErrorMessage("Network error. Please check your connection.");
@@ -266,12 +251,7 @@ function SignUp() {
           )}
         </button>
         
-        <button className="mt-4 w-full flex items-center justify-center gap-2 border solid border-neutral-400 hover:bg-gray-200 rounded-lg px-4 py-2 transition duration-200 cursor-pointer">
-          <FcGoogle />
-          <span>Sign up with google</span>
-        </button>
-        
-        <p className="text-center mt-2">Already have an Account ? <span className="text-primary-400 cursor-pointer" onClick={() => navigate("/signin")}>Sign In</span></p>
+        <p className="text-center mt-6">Already have an Account ? <span className="text-primary-400 cursor-pointer" onClick={() => navigate("/signin")}>Sign In</span></p>
       </div>
     </div>
   );

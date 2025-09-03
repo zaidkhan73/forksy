@@ -3,13 +3,13 @@ import React from "react";
 import { useState } from "react";
 import { IoMdEye } from "react-icons/io";
 import { IoMdEyeOff } from "react-icons/io";
-import { FcGoogle } from "react-icons/fc";
 import {useNavigate} from "react-router-dom";
 import axios from "axios";
 import { serverUrl } from "../App";
-import { GoogleAuthProvider , signInWithPopup } from "firebase/auth";
-import { auth } from "../../firebase";
 import { ClipLoader }  from "react-spinners"
+import { useDispatch } from "react-redux";
+import { setUserData } from "../../redux/userSlice";
+
 
 function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
@@ -18,6 +18,7 @@ function SignIn() {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch()
 
   const handleSignIn = async () => {
     // Clear previous error message
@@ -30,7 +31,7 @@ function SignIn() {
         password,
       },{withCredentials:true})
       
-      console.log(res);
+      dispatch(setUserData(res.data))
       
       // Handle successful login here
       // For example: navigate to dashboard, store user data, etc.
@@ -38,16 +39,9 @@ function SignIn() {
     } catch (error) {
       console.log("error: ", error);
       
-      // Handle different error scenarios
-      if (error.response) {
-        // Server responded with error status
-        if (error.response.status === 401 || error.response.status === 400) {
-          setErrorMessage("Invalid email or password");
-        } else if (error.response.status === 404) {
-          setErrorMessage("Invalid email or password");
-        } else {
-          setErrorMessage("Something went wrong. Please try again.");
-        }
+      // Use backend error message directly
+      if (error.response && error.response.data && error.response.data.message) {
+        setErrorMessage(error.response.data.message);
       } else if (error.request) {
         // Network error
         setErrorMessage("Network error. Please check your connection.");
@@ -57,18 +51,6 @@ function SignIn() {
       }
     } finally {
       setIsLoading(false);
-    }
-  }
-  const handleGoogleAuth = async() => {
-    const provider = new GoogleAuthProvider()
-    const res = await signInWithPopup(auth, provider)
-    try {
-      const {data} = await axios.post(`${serverUrl}/api/auth/google-auth`,{
-        email: res.user.email,
-      }, {withCredentials:true})
-      console.log(data)
-    } catch (error) {
-      console.log("error while signup with google : ",error)
     }
   }
 
@@ -171,13 +153,7 @@ function SignIn() {
           )}
         </button>
         
-        <button className="mt-4 w-full flex items-center justify-center gap-2 border solid border-neutral-400 hover:bg-gray-200 rounded-lg px-4 py-2 transition duration-200 cursor-pointer"
-        onClick={handleGoogleAuth}>
-          <FcGoogle />
-          <span>Sign In with google</span>
-        </button>
-        
-        <p className="text-center mt-2">Don't have an Account ? <span className="text-primary-400 cursor-pointer" onClick={() => navigate("/signup")}>Sign Up</span></p>
+        <p className="text-center mt-6">Don't have an Account ? <span className="text-primary-400 cursor-pointer" onClick={() => navigate("/signup")}>Sign Up</span></p>
       </div>
     </div>
   );

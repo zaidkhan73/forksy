@@ -49,7 +49,7 @@ const signUp = asyncHandler(async (req, res, next) => {
     //send cookies
     res.cookie("token",token,{
         secure:false,
-        sameSite:"strict",
+        sameSite:"lax",
         maxAge:7*24*60*60*1000,
         httpOnly:true
     })
@@ -85,11 +85,13 @@ const signIn = asyncHandler(async(req,res)=>{
 
     //generate token
     const token = await generateToken(user._id)
+    //console.log("Login successful, token:", token)
+
 
     //send cookies
     res.cookie("token",token,{
         secure:false,
-        sameSite:"strict",
+        sameSite:"lax",
         maxAge:7*24*60*60*1000,
         httpOnly:true
     })
@@ -202,9 +204,11 @@ const googleAuth = async (req,res)=>{
         }
     
         const token = await generateToken(user._id)
+        //console.log("Login successful, token:", token)
+
         res.cookie("token", token,{
             secure:false,
-            sameSite: "strict",
+            sameSite: "lax",
             maxAge: 7*24*60*60*1000,
             httpOnly: true
         })
