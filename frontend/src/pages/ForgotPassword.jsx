@@ -77,7 +77,7 @@ function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      const res = await axios.post(`${serverUrl}/api/auth/send-otp`, { email }, { withCredentials: true });
+      const res = await axios.post(`${serverUrl}/api/auth/password-otp`, { email }, { withCredentials: true });
       console.log(res);
       setStep(2);
     } catch (error) {

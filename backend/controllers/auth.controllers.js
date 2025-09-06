@@ -1,64 +1,72 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {User} from "../models/user.model.js";
+import { TempUser } from "../models/temp.model.js";
 import bcrypt from "bcryptjs";
 import {ApiError} from "../utils/apiError.js";
 import { generateToken } from "../utils/token.js";
 import { ApiResponse } from "../utils/apiResponse.js";
-import { sendOtpMail } from "../utils/mail.js";
+import { sendPasswordMail } from "../utils/mail.js";
+import { sendVerificationMail } from "../utils/mail.js";
 
 
 const signUp = asyncHandler(async (req, res, next) => {
-    //get data
-    const {fullName, email, password, mobile, role} =req.body
+  const { fullName, email, password, mobile, role, otp } = req.body;
 
-    //check if email is valid
-    const existingUser = await User.findOne({email})
-    if(existingUser){
-        throw new ApiError(409, "User already exists")
-    }
+  const tempUser = await TempUser.findOne({ email });
+  if (!tempUser) {
+    return res.status(400).json({ message: "No signup request found" });
+  }
 
-    //check password and mobile number
-    if(password.length < 6){
-        throw new ApiError(400, "password must be atleast 6 characters long")
-    }
-    if(mobile.length !== 10){
-        throw new ApiError(400, "mobile number must be 10 digits long")
-    }
+  if (tempUser.otp !== otp) {
+    return res.status(400).json({ message: "Invalid OTP" });
+  }
 
-    //encode password
-    const hashedPassword = await bcrypt.hash(password, 10)
+  if (Date.now() > tempUser.otpExpiry) {
+    await TempUser.deleteOne({ email });
+    return res.status(400).json({ message: "OTP expired" });
+  }
 
-    //create and store user in db
-    const user = await User.create({
-        fullName,
-        email,
-        password: hashedPassword,
-        mobile,
-        role
-    })
-    
-    //check if user is created
-    const isUserCreated = await User.findOne(user._id).select("-password")
-    if(!isUserCreated){
-        throw new ApiError(500,"something went wrong while registering user")
-    }
-    
-    //generate token
-    const token = generateToken(user._id)
+  if (password.length < 6) {
+    throw new ApiError(400, "password must be atleast 6 characters long");
+  }
+  if (mobile.length !== 10) {
+    throw new ApiError(400, "mobile number must be 10 digits long");
+  }
 
-    //send cookies
-    res.cookie("token",token,{
-        secure:false,
-        sameSite:"lax",
-        maxAge:7*24*60*60*1000,
-        httpOnly:true
-    })
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-    //send response
-    return res
-    .status(201)
-    .json(new ApiResponse(201, isUserCreated,"user registered successfully"))
-})
+  const user = await User.create({
+    fullName,
+    email,
+    password: hashedPassword,
+    mobile,
+    role,
+    isEmailVerified: true,
+  });
+
+  const isUserCreated = await User.findById(user._id).select("-password");
+  if (!isUserCreated) {
+    throw new ApiError(500, "something went wrong while registering user");
+  }
+
+  const token = generateToken(user._id);
+
+  await TempUser.deleteOne({ email });
+
+  res.cookie("token", token, {
+    secure: false,
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+  });
+
+  // Sirf user object bhejna, statusCode/message optional
+  return res.status(201).json({
+    success: true,
+    user: isUserCreated,
+    message: "user registered successfully",
+  });
+});
 
 const signIn = asyncHandler(async(req,res)=>{
     //get data from frontend
@@ -115,7 +123,7 @@ const signOut = asyncHandler(async(req,res)=>{
     .json(new ApiResponse(200,{},"user signed out"))
 })
 
-const sendOtp = async (req,res)=>{
+const passwordOtp = async (req,res)=>{
     try {
         //get user
         const {email} = req.body
@@ -136,8 +144,40 @@ const sendOtp = async (req,res)=>{
         user.otpExpires = Date.now()+5*60*1000
         user.isOtpVerified=false
         await user.save()
-        await sendOtpMail(email, otp, user.fullName)
-        return res.status(200).json({message:"otp send successfully"})
+        await sendPasswordMail(email, otp, user.fullName)
+        return res.status(200).json({message:"password reset mail send successfully"})
+    } catch (error) {
+        return res.status(500).json(`error during sending otp ${error}`)
+    }
+}
+
+const emailOtp = async(req,res)=>{
+    try {
+        const {email , fullName} =req.body
+    
+        //check if email is valid
+        const existingUser = await User.findOne({email})
+        if(existingUser){
+            return res.status(500).json(`user already exists`)
+        }
+    
+        await TempUser.deleteOne({ email });
+    
+        const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    
+        const tempUser = new TempUser({
+          email,
+          fullName,
+          otp,
+          otpExpiry: Date.now() + 5 * 60 * 1000, // 5 min
+        });
+    
+    
+        await tempUser.save();
+    
+        await sendVerificationMail(email, otp, tempUser)
+    
+        return res.status(200).json({message:"verification mail send successfully"})
     } catch (error) {
         return res.status(500).json(`error during sending otp ${error}`)
     }
@@ -191,43 +231,16 @@ const resetPassword = async(req,res)=>{
     }
 }
 
-const googleAuth = async (req,res)=>{
-    try {
-        const {fullName, email, mobile, role} = req.body
-    
-        let user = await User.findOne({email})
-    
-        if(!user){
-            user = await User.create({
-                fullName, email, mobile, role
-            })
-        }
-    
-        const token = await generateToken(user._id)
-        //console.log("Login successful, token:", token)
 
-        res.cookie("token", token,{
-            secure:false,
-            sameSite: "lax",
-            maxAge: 7*24*60*60*1000,
-            httpOnly: true
-        })
-    
-        return res.status(200).json(user)
-    } catch (error) {
-        return res.status(500).json(`google auth error ${error}`)
-
-    }
-
-}
 
 
 export {
     signIn,
     signUp,
     signOut,
-    sendOtp,
+    passwordOtp,
     verifyOtp,
+    emailOtp,
     resetPassword,
-    googleAuth
+   
 }

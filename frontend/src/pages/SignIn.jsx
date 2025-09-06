@@ -45,8 +45,8 @@ function SignIn() {
     } catch (error) {
       console.log("error: ", error);
 
-      if (error.response?.data?.message) {
-        setErrorMessage(error.response.data.message);
+      if (error.response?.data) {
+        setErrorMessage(error.response.data);
       } else if (error.request) {
         setErrorMessage("Network error. Please check your connection.");
       } else {
