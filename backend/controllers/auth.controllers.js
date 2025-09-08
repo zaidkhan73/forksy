@@ -151,37 +151,39 @@ const passwordOtp = async (req,res)=>{
     }
 }
 
-const emailOtp = async(req,res)=>{
-    try {
-        const {email , fullName} =req.body
-    
-        //check if email is valid
-        const existingUser = await User.findOne({email})
-        if(existingUser){
-            return res.status(500).json(`user already exists`)
-        }
-    
-        await TempUser.deleteOne({ email });
-    
-        const otp = Math.floor(100000 + Math.random() * 900000).toString()
-    
-        const tempUser = new TempUser({
-          email,
-          fullName,
-          otp,
-          otpExpiry: Date.now() + 5 * 60 * 1000, // 5 min
-        });
-    
-    
-        await tempUser.save();
-    
-        await sendVerificationMail(email, otp, tempUser)
-    
-        return res.status(200).json({message:"verification mail send successfully"})
-    } catch (error) {
-        return res.status(500).json(`error during sending otp ${error}`)
+const emailOtp = async (req, res) => {
+  try {
+    const { email, fullName } = req.body;
+
+    // check if email is valid
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ message: "User already exists" });
     }
-}
+
+    await TempUser.deleteOne({ email });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const tempUser = new TempUser({
+      email,
+      fullName,
+      otp,
+      otpExpiry: Date.now() + 5 * 60 * 1000, // 5 min
+    });
+
+    await tempUser.save();
+    await sendVerificationMail(email, otp, tempUser.fullName);
+
+    return res.status(200).json({ message: "Verification mail sent successfully" });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error during sending otp",
+      error: error.message,
+    });
+  }
+};
+
 
 const verifyOtp = async(req,res)=>{
     try {

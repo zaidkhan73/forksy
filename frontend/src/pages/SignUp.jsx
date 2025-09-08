@@ -62,7 +62,7 @@ function SignUp() {
       console.log("error in sending otp : ", error);
 
       if (error.response?.data) {
-        setErrorMessage(error.response.data);
+        setErrorMessage(error.response.data.message);
       } else if (error.request) {
         setErrorMessage("Network error. Please check your connection.");
         console.log("error : ",error)
@@ -74,49 +74,42 @@ function SignUp() {
     }
   };
 
-  const handleVerifyOtp = async () => {
-    setErrorMessage("");
-    setIsLoading(true);
+ const handleVerifyOtp = async () => {
+  setErrorMessage("");
+  setIsLoading(true);
 
-    try {
-      const res = await axios.post(
-        `${serverUrl}/api/auth/signup`,
-        {
-          fullName,
-          email,
-          mobile,
-          password,
-          role,
-          otp
-        },
-        { withCredentials: true }
-      );
+  try {
+    const res = await axios.post(
+      `${serverUrl}/api/auth/signup`,
+      {
+        fullName,
+        email,
+        password,
+        mobile,
+        role,
+        otp,   // ✅ OTP bhi bhejna hoga
+      },
+      { withCredentials: true }
+    );
 
-      dispatch(setUserData(res.data.user));
+    console.log(res.data);
+    dispatch(setUserData(res.data.user)); // ✅ User ko redux me save karo
+    navigate("/"); // ✅ Signup ke baad redirect
+  } catch (error) {
+    console.log("error in verifying otp : ", error);
 
-      // Handle successful signup here
-      // For example: navigate to signin, show success message, etc.
-    } catch (error) {
-      console.log("error: ", error);
-
-      // Use backend error message directly
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        setErrorMessage(error.response.data.message);
-      } else if (error.request) {
-        // Network error
-        setErrorMessage("Network error. Please check your connection.");
-      } else {
-        // Other errors
-        setErrorMessage("Something went wrong. Please try again.");
-      }
-    } finally {
-      setIsLoading(false);
+    if (error.response?.data?.message) {
+      setErrorMessage(error.response.data.message);
+    } else if (error.request) {
+      setErrorMessage("Network error. Please check your connection.");
+    } else {
+      setErrorMessage("Something went wrong. Please try again.");
     }
-  };
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   // Clear error message when user starts typing in any field
   const handleFullNameChange = (e) => {

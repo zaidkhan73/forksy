@@ -46,3 +46,13 @@
   --color-neutral-800: #5d5841;
   --color-neutral-900: #4c4737;
 }
+
+/* global.css */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

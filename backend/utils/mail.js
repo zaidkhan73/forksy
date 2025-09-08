@@ -252,7 +252,7 @@ export const sendPasswordMail = async (to, otp, username) => {
   });
 };
 
-export const sendVerificationMail = async (to, otp, username) => {
+export const sendVerificationMail = async (to, otp, username,  timestamp = new Date().toLocaleString(), device = "Web Browser", location = "Unknown", ipAddress = "Hidden") => {
   await transporter.sendMail({
     from: process.env.EMAIL,
     to,
