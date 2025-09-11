@@ -19,6 +19,6 @@ app.use(cookieParser())
 app.use("/api/auth",authRouter)
 app.use("/api/user",userRouter)
 app.use("/api/shop",shopRouter)
-app.use("/item/shop",itemRouter)
+app.use("/api/item",itemRouter)
 
 export {app}

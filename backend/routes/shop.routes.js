@@ -6,6 +6,6 @@ import { upload } from "../middlewares/multer.js"
 const shopRouter = express.Router()
 
 shopRouter.post("/create-edit-shop",isAuth,upload.single("image"),createAndEditShop)
-shopRouter.post("/get-shop",isAuth,getMyShop)
+shopRouter.get("/get-shop",isAuth,getMyShop)
 
 export default shopRouter

@@ -1,5 +1,6 @@
 /* tailwind.config.js or @import in your main CSS file */
 @import "tailwindcss";
+@tailwind utilities;
 
 @theme {
   --color-primary-50: #f0f9f0;
@@ -56,3 +57,5 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+

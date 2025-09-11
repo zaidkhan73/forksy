@@ -3,7 +3,7 @@ import axios from 'axios'
 import React from 'react'
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { setCity } from '../redux/userSlice'
+import { setAddress, setCity, setState } from '../redux/userSlice'
 
 function useGetCity() {
 const apikey = import.meta.env.VITE_GEOAPIKEY
@@ -17,8 +17,11 @@ const {userData} = useSelector(state=>state.user)
       const res = await axios.get(`https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&format=json&apiKey=${apikey}`)
       console.log(res.data.results[0].city)
       dispatch(setCity(res?.data?.results[0].city))
+      dispatch(setState(res?.data?.results[0].state))
+      dispatch(setAddress(res?.data?.results[0].formatted))
+      console.log(res)
     })
-  },[userData])
+  },[userData, dispatch])
   
 }
 

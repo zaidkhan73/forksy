@@ -11,7 +11,7 @@ const addItem = async (req, res) => {
       image = await uploadOnCloudinary(req.file.path);
     }
 
-    const shop = await Shop.findOne({ owner: req.userId });
+    const shop = await Shop.findOne({ owner: req.userId })
     if (!shop) {
       return res.status(400).json({ message: "Shop not found" });
     }
@@ -25,9 +25,11 @@ const addItem = async (req, res) => {
       shop: shop._id,
     });
 
-    await item.populate("shop");
+    shop.items.push(item._id);
+    await shop.save();
+    await shop.populate("items owner");
 
-    return res.status(201).json(item); // Created
+    return res.status(201).json(shop); // Created
   } catch (error) {
     return res.status(500).json({
       message: "Error while adding item",
