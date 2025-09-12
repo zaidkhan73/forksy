@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { IoArrowBack } from "react-icons/io5";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { FaUtensils } from "react-icons/fa";
 import { useState } from "react";
@@ -8,7 +8,7 @@ import axios from "axios";
 import { serverUrl } from "../App";
 import { setShopData } from "../../redux/ownerSlice";
 import { Listbox } from "@headlessui/react";
-import {  AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { motion } from "framer-motion";
 import { FaChevronDown, FaCheck } from "react-icons/fa";
 
@@ -120,19 +120,23 @@ const CustomDropdown = ({ value, onChange, options, placeholder, label }) => {
   );
 };
 
-function AddItem() {
+function EditItem() {
+    const [currentItem , setCurrentItem] = useState(null)
   const navigate = useNavigate();
   const dispatch = useDispatch();
- // const { shopData } = useSelector((state) => state.owner);
-
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [category, setCategory] = useState("");
-  const [foodType, setFoodType] = useState("veg");
+  const {itemId} = useParams()
+//  const { shopData } = useSelector((state) => state.owner);
+ 
   
-  const [frontendImage, setFrontendImage] = useState(null);
+  const [name, setName] = useState( "");
+  const [price, setPrice] = useState( "");
+  const [category, setCategory] = useState( "");
+  const [foodType, setFoodType] = useState( "");
+  
+  const [frontendImage, setFrontendImage] = useState( null);
   const [backendImage, setBackendImage] = useState("");
-  
+
+ 
   const categoryOptions = [
     { value: "Snacks", label: "Snacks" },
     { value: "Main Course", label: "Main Course" },
@@ -169,15 +173,40 @@ function AddItem() {
       if (backendImage) {
         formData.append("image", backendImage);
       }
-      const res = await axios.post(`${serverUrl}/api/item/add-item`, formData, {
+      const res = await axios.post(`${serverUrl}/api/item/edit-item/${itemId}`, formData, {
         withCredentials: true,
       });
       dispatch(setShopData(res.data));
       console.log(res.data);
+      navigate("/");
     } catch (error) {
       console.log(error);
     } 
   };
+
+  useEffect(()=>{
+    const handleGetItemById = async () =>{
+        try {
+            const res = await axios.get(`${serverUrl}/api/item/item/${itemId}`,{withCredentials:true})
+            console.log(res.data)
+            setCurrentItem(res.data)
+            
+        } catch (error) {
+            console.log(error)
+        }
+    }
+    handleGetItemById()
+  },[itemId])
+
+  useEffect(() => {
+  if (currentItem) {
+    setName(currentItem.name || "");
+    setPrice(currentItem.price || "");
+    setCategory(currentItem.category || "");
+    setFoodType(currentItem.foodType || "");
+    setFrontendImage(currentItem.image || null);
+  }
+}, [currentItem]);
 
   return (
     <div className="flex justify-center flex-col items-center p-6 bg-gradient-to-br from-sage-300 relative via-sage-200 to-sage-100 min-h-screen">
@@ -193,7 +222,7 @@ function AddItem() {
           <div className="bg-primary-100 p-4 rounded-full mb-4">
             <FaUtensils className="text-primary-600 w-16 h-16" />
           </div>
-          <div className="text-3xl font-extrabold text-gray-900">Add food item</div>
+          <div className="text-3xl font-extrabold text-gray-900">Edit food item</div>
         </div>
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div>
@@ -272,4 +301,4 @@ function AddItem() {
   );
 }
 
-export default AddItem;
+export default EditItem;

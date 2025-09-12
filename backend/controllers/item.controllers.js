@@ -63,9 +63,16 @@ const editItem = async (req, res) => {
         image: image || oldItem.image, // preserve old image
       },
       { new: true }
-    ).populate("shop");
+    )
 
-    return res.status(200).json(updatedItem); // OK
+    if(!updatedItem){
+      return res.status(400).json({ message: "Error while editing item" });
+    }
+
+    const shop = await Shop.findOne({ owner: req.userId }).populate("items");
+
+
+    return res.status(200).json(shop); // OK
   } catch (error) {
     return res.status(500).json({
       message: "Error while editing item",
@@ -74,4 +81,17 @@ const editItem = async (req, res) => {
   }
 };
 
-export { addItem, editItem };
+const getItemById = async (req, res) => {
+  try {
+    const item = await Item.findById(req.params.itemId);
+    if (!item) return res.status(404).json({ message: "Item not found" });
+    return res.status(200).json(item);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error while fetching item",
+      error: error.message
+    });
+  }
+};
+
+export { addItem, editItem , getItemById};
