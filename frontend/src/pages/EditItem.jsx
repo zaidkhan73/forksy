@@ -8,8 +8,8 @@ import axios from "axios";
 import { serverUrl } from "../App";
 import { setShopData } from "../../redux/ownerSlice";
 import { Listbox } from "@headlessui/react";
-import { AnimatePresence } from "framer-motion";
-import { motion } from "framer-motion";
+// eslint-disable-next-line no-unused-vars
+import { motion, AnimatePresence } from "framer-motion";
 import { FaChevronDown, FaCheck } from "react-icons/fa";
 
 // Custom Dropdown Component

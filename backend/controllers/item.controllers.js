@@ -27,7 +27,16 @@ const addItem = async (req, res) => {
 
     shop.items.push(item._id);
     await shop.save();
-    await shop.populate("items owner");
+    await shop.populate("owner")
+    await shop.populate({
+      path:"items",
+      options:{
+        sort:{
+          updatedAt:-1
+        }
+      }
+    });
+
 
     return res.status(201).json(shop); // Created
   } catch (error) {
@@ -69,10 +78,17 @@ const editItem = async (req, res) => {
       return res.status(400).json({ message: "Error while editing item" });
     }
 
-    const shop = await Shop.findOne({ owner: req.userId }).populate("items");
+    const shop = await Shop.findOne({ owner: req.userId }).populate({
+      path:"items",
+      options:{
+        sort:{
+          updatedAt:-1
+        }
+      }
+    });
 
 
-    return res.status(200).json(shop); // OK
+    return res.status(200).json(shop); 
   } catch (error) {
     return res.status(500).json({
       message: "Error while editing item",
@@ -94,4 +110,39 @@ const getItemById = async (req, res) => {
   }
 };
 
-export { addItem, editItem , getItemById};
+const deleteItem = async (req, res) => {
+  try {
+    const itemId = req.params.itemId;
+
+    // delete the item
+    const item = await Item.findByIdAndDelete(itemId);
+
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    // remove item reference from shop
+    const shop = await Shop.findOne({ owner: req.userId });
+    if (shop) {
+      shop.items = shop.items.filter(i => String(i._id) !== itemId);
+      await shop.save();
+      await shop.populate({
+        path:"items",
+        options:{
+          sort:{
+            updatedAt:-1
+          }
+        }
+      });
+    }
+
+    return res.status(200).json(shop);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error while deleting item",
+      error: error.message
+    });
+  }
+};
+
+export { addItem, editItem , getItemById, deleteItem};

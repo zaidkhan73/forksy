@@ -8,13 +8,15 @@ import axios from "axios";
 import { serverUrl } from "../App";
 import { setShopData } from "../../redux/ownerSlice";
 import { Listbox } from "@headlessui/react";
-import {  AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { FaChevronDown, FaCheck } from "react-icons/fa";
+import { ClipLoader } from "react-spinners";
 
 // Custom Dropdown Component
 const CustomDropdown = ({ value, onChange, options, placeholder, label }) => {
-  const [dropdownPosition, setDropdownPosition] = useState('bottom');
+  const [dropdownPosition, setDropdownPosition] = useState("bottom");
   const buttonRef = React.useRef(null);
 
   const handleButtonClick = () => {
@@ -23,26 +25,31 @@ const CustomDropdown = ({ value, onChange, options, placeholder, label }) => {
       const viewportHeight = window.innerHeight;
       const spaceBelow = viewportHeight - buttonRect.bottom;
       const spaceAbove = buttonRect.top;
-      
+
       // Estimate dropdown height (approximately 50px per item + padding)
       const estimatedDropdownHeight = Math.min(options.length * 50 + 16, 240); // max-h-60 = 240px
-      
+
       // If not enough space below but enough space above, position upward
-      if (spaceBelow < estimatedDropdownHeight && spaceAbove > estimatedDropdownHeight) {
-        setDropdownPosition('top');
+      if (
+        spaceBelow < estimatedDropdownHeight &&
+        spaceAbove > estimatedDropdownHeight
+      ) {
+        setDropdownPosition("top");
       } else {
-        setDropdownPosition('bottom');
+        setDropdownPosition("bottom");
       }
     }
   };
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label}
+      </label>
       <Listbox value={value} onChange={onChange}>
         {({ open }) => (
           <div className="relative">
-            <Listbox.Button 
+            <Listbox.Button
               ref={buttonRef}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-1 border-neutral-400 focus:ring-primary-500 transition-all duration-300 bg-white text-left flex items-center justify-between hover:border-primary-300"
               onClick={handleButtonClick}
@@ -60,22 +67,22 @@ const CustomDropdown = ({ value, onChange, options, placeholder, label }) => {
 
             <AnimatePresence>
               {open && (
-                <Listbox.Options 
+                <Listbox.Options
                   className={`absolute z-10 w-full bg-white border border-neutral-300 rounded-lg shadow-lg max-h-60 overflow-auto focus:outline-none ${
-                    dropdownPosition === 'top' 
-                      ? 'bottom-full mb-1' 
-                      : 'top-full mt-1'
+                    dropdownPosition === "top"
+                      ? "bottom-full mb-1"
+                      : "top-full mt-1"
                   }`}
                 >
                   <motion.div
-                    initial={{ 
-                      opacity: 0, 
-                      y: dropdownPosition === 'top' ? 10 : -10 
+                    initial={{
+                      opacity: 0,
+                      y: dropdownPosition === "top" ? 10 : -10,
                     }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ 
-                      opacity: 0, 
-                      y: dropdownPosition === 'top' ? 10 : -10 
+                    exit={{
+                      opacity: 0,
+                      y: dropdownPosition === "top" ? 10 : -10,
                     }}
                     transition={{ duration: 0.2 }}
                   >
@@ -88,12 +95,20 @@ const CustomDropdown = ({ value, onChange, options, placeholder, label }) => {
                             active
                               ? "bg-primary-50 text-primary-700"
                               : "text-gray-900"
-                          } ${selected ? "bg-primary-100 text-primary-800 font-medium" : ""}`
+                          } ${
+                            selected
+                              ? "bg-primary-100 text-primary-800 font-medium"
+                              : ""
+                          }`
                         }
                       >
                         {({ selected }) => (
                           <div className="flex items-center justify-between">
-                            <span className={selected ? "font-medium" : "font-normal"}>
+                            <span
+                              className={
+                                selected ? "font-medium" : "font-normal"
+                              }
+                            >
                               {option.label}
                             </span>
                             {selected && (
@@ -123,16 +138,16 @@ const CustomDropdown = ({ value, onChange, options, placeholder, label }) => {
 function AddItem() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
- // const { shopData } = useSelector((state) => state.owner);
-
+  // const { shopData } = useSelector((state) => state.owner);
+  const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
-  const [foodType, setFoodType] = useState("veg");
-  
+  const [foodType, setFoodType] = useState("Veg");
+
   const [frontendImage, setFrontendImage] = useState(null);
   const [backendImage, setBackendImage] = useState("");
-  
+
   const categoryOptions = [
     { value: "Snacks", label: "Snacks" },
     { value: "Main Course", label: "Main Course" },
@@ -160,12 +175,13 @@ function AddItem() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      setIsLoading(true);
       const formData = new FormData();
       formData.append("name", name);
       formData.append("price", price);
       formData.append("category", category);
       formData.append("foodType", foodType);
-      console.log("form data: ",formData)
+      console.log("form data: ", formData);
       if (backendImage) {
         formData.append("image", backendImage);
       }
@@ -174,9 +190,12 @@ function AddItem() {
       });
       dispatch(setShopData(res.data));
       console.log(res.data);
+      navigate("/");
     } catch (error) {
       console.log(error);
-    } 
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -193,11 +212,15 @@ function AddItem() {
           <div className="bg-primary-100 p-4 rounded-full mb-4">
             <FaUtensils className="text-primary-600 w-16 h-16" />
           </div>
-          <div className="text-3xl font-extrabold text-gray-900">Add food item</div>
+          <div className="text-3xl font-extrabold text-gray-900">
+            Add food item
+          </div>
         </div>
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Name
+            </label>
             <input
               type="text"
               placeholder="Enter food item name"
@@ -206,9 +229,11 @@ function AddItem() {
               value={name}
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Food image</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Food image
+            </label>
             <input
               type="file"
               accept="image/*"
@@ -230,9 +255,11 @@ function AddItem() {
               </motion.div>
             )}
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Price
+            </label>
             <input
               type="number"
               placeholder="0"
@@ -241,7 +268,7 @@ function AddItem() {
               value={price}
             />
           </div>
-          
+
           <CustomDropdown
             value={category}
             onChange={setCategory}
@@ -249,7 +276,7 @@ function AddItem() {
             placeholder="Select category"
             label="Select category"
           />
-          
+
           <CustomDropdown
             value={foodType}
             onChange={setFoodType}
@@ -257,14 +284,21 @@ function AddItem() {
             placeholder="Select food type"
             label="Select food type"
           />
-          
+
           <motion.button
-            className="w-full text-white bg-primary-700 px-6 py-3 rounded-lg font-semibold shadow-md hover:shadow-lg hover:bg-primary-800 transition-all duration-300 cursor-pointer"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            className={`w-full text-white px-6 py-3 rounded-lg font-semibold shadow-md 
+             flex items-center justify-center gap-2 transition-all duration-300 
+             ${
+               isLoading
+                 ? "bg-primary-400 cursor-not-allowed opacity-70"
+                 : "bg-primary-700 hover:shadow-lg hover:bg-primary-800 cursor-pointer"
+             }`}
+            whileHover={isLoading ? {} : { scale: 1.02 }}
+            whileTap={isLoading ? {} : { scale: 0.98 }}
             type="submit"
+            disabled={isLoading}
           >
-            Save
+            {isLoading ? <ClipLoader size={20} color="#fff" /> : "Save"}
           </motion.button>
         </form>
       </div>

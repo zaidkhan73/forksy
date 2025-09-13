@@ -13,10 +13,9 @@ import { useNavigate } from "react-router-dom";
 import { FaPlus } from "react-icons/fa";
 import { TbReceipt } from "react-icons/tb";
 
-
 function Nav() {
   const { userData, city } = useSelector((state) => state.user);
-  const { shopData } = useSelector((state) => state.owner)
+  const { shopData } = useSelector((state) => state.owner);
   const [showInfo, setShowInfo] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -70,7 +69,10 @@ function Nav() {
             </div>
           </div>
           <div className="flex-1 flex items-center gap-2 sm:gap-3 pr-3">
-            <IoSearch size={20} className="text-primary-600 sm:w-6 sm:h-6 flex-shrink-0" />
+            <IoSearch
+              size={20}
+              className="text-primary-600 sm:w-6 sm:h-6 flex-shrink-0"
+            />
             <input
               type="text"
               placeholder="Search delicious food"
@@ -95,7 +97,10 @@ function Nav() {
             </div>
           </div>
           <div className="flex-1 flex items-center gap-2 lg:gap-3 pr-3">
-            <IoSearch size={20} className="text-primary-600 lg:w-6 lg:h-6 flex-shrink-0" />
+            <IoSearch
+              size={20}
+              className="text-primary-600 lg:w-6 lg:h-6 flex-shrink-0"
+            />
             <input
               type="text"
               placeholder="Search delicious food"
@@ -124,37 +129,54 @@ function Nav() {
           ))}
 
         {/* Owner Actions */}
-        {userData.role === "owner" ? 
+        {userData.role === "owner" ? (
           <>
-          {shopData && <>
-          {/* Add Food Items Button */}
-            <button className="hidden md:flex gap-1 lg:gap-2 items-center px-2 py-1 lg:px-3 lg:py-2 cursor-pointer rounded-full bg-primary-100 text-primary-600 text-sm lg:text-base font-medium">
-              <FaPlus size={16} className="lg:w-5 lg:h-5" />
-              <span className="hidden lg:inline">Add Food Items</span>
-              <span className="lg:hidden">Add Items</span>
-            </button>
-            
-            {/* Mobile Add Button */}
-            <button className="md:hidden flex items-center p-2 cursor-pointer rounded-full bg-primary-100 text-primary-600">
-              <FaPlus size={16} className="sm:w-5 sm:h-5" />
-            </button>
-          </>}
-            
-            
+            {shopData && (
+              <>
+                {/* Add Food Items Button */}
+                {/* For medium and larger screens only */}
+                <button
+                  className="hidden md:flex gap-1 lg:gap-2 items-center px-2 py-1 lg:px-3 lg:py-2 
+             cursor-pointer rounded-full bg-primary-100 text-primary-600 
+             text-sm lg:text-base font-medium"
+                  onClick={() => navigate("/add-item")}
+                >
+                  <FaPlus size={16} className="lg:w-5 lg:h-5" />
+                  <span>Add Food Items</span>
+                </button>
+
+                {/* For small screens only */}
+                <button
+                  className="flex md:hidden items-center p-2 
+             cursor-pointer rounded-full bg-primary-100 text-primary-600"
+                  onClick={() => navigate("/add-item")}
+                >
+                  <FaPlus size={16} className="sm:w-5 sm:h-5" />
+                </button>
+
+                
+              </>
+            )}
+
             {/* My Orders */}
             <div className="flex items-center gap-1 sm:gap-2 cursor-pointer relative px-2 sm:px-3 py-1 sm:py-2 rounded-lg bg-primary-100 text-primary-600 font-medium">
-              <TbReceipt size={20}  />
-              <span className="hidden sm:block text-sm lg:text-base">My Orders</span>
+              <TbReceipt size={20} />
+              <span className="hidden sm:block text-sm lg:text-base">
+                My Orders
+              </span>
               <span className="absolute -right-1 sm:-right-2 -top-1 sm:-top-2 text-xs font-bold text-white rounded-full bg-primary-600 px-1 sm:px-[6px] py-0 sm:py-[1px] min-w-[16px] sm:min-w-[20px] text-center">
                 0
               </span>
             </div>
           </>
-         : userData.role === "user" ? (
+        ) : userData.role === "user" ? (
           <>
             {/* Shopping Cart */}
             <div className="relative cursor-pointer">
-              <IoCartOutline size={20} className="text-primary-600 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
+              <IoCartOutline
+                size={20}
+                className="text-primary-600 sm:w-6 sm:h-6 lg:w-7 lg:h-7"
+              />
               <span className="absolute -right-1 sm:-right-2 -top-2 sm:-top-3 text-xs font-bold text-white rounded-full bg-primary-600 px-1 sm:px-[6px] min-w-[16px] sm:min-w-[18px] text-center">
                 0
               </span>
@@ -182,14 +204,14 @@ function Nav() {
               <div className="text-sm sm:text-base lg:text-lg font-semibold py-2 px-2 border-b border-gray-100">
                 {userData.fullName}
               </div>
-              
+
               {/* Mobile My Orders */}
               {userData.role === "user" && (
                 <div className="md:hidden text-primary-600 font-semibold cursor-pointer hover:bg-primary-50 py-2 rounded-lg px-2 transition-all text-sm sm:text-base">
                   My Orders
                 </div>
               )}
-              
+
               {/* Logout */}
               <div
                 className={`text-primary-600 font-semibold cursor-pointer hover:bg-primary-50 py-2 rounded-lg px-2 transition-all text-sm sm:text-base ${

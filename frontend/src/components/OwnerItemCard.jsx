@@ -1,12 +1,26 @@
+import axios from "axios";
 import React from "react";
 import { FaPen } from "react-icons/fa";
 import { FaTrashAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { serverUrl } from "../App";
+import { useDispatch } from "react-redux";
+import { setShopData } from "../../redux/ownerSlice";
 
 function OwnerItemCard({ data }) {
     const navigate = useNavigate()
+    const dispatch = useDispatch()
+    const handleDelete = async() => {
+        try {
+            const res = await axios.get(`${serverUrl}/api/item/delete/${data._id}`,{withCredentials:true})
+            dispatch(setShopData(res.data))
+            console.log(res.data)
+        } catch (error) {
+            console.log(error)
+        }
+    }
   return (
-    <div className="flex bg-white rounded-lg shadow-md overflow-hidden w-full max-w-2xl border border-gray-200">
+    <div className="flex bg-white rounded-lg shadow-md overflow-hidden w-full max-w-2xl border border-primary-600">
       {/* Image Section */}
       <div className="w-36 h-36 flex-shrink-0 bg-gray-50">
         <img
@@ -37,7 +51,7 @@ function OwnerItemCard({ data }) {
             <div className="p-2 rounded-full hover:bg-primary-100 text-primary-500 transition-all duration-300 " onClick={()=>navigate(`/edit-item/${data._id}`)}>
               <FaPen  />        
             </div>
-            <div className="p-2 rounded-full hover:bg-primary-100 text-primary-500 transition-all duration-300 ">
+            <div className="p-2 rounded-full hover:bg-primary-100 text-primary-500 transition-all duration-300 " onClick={handleDelete}>
                 <FaTrashAlt />
             </div>
           </div>
