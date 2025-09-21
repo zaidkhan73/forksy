@@ -13,13 +13,14 @@ import { useNavigate } from "react-router-dom";
 import { FaPlus } from "react-icons/fa";
 import { TbReceipt } from "react-icons/tb";
 
+
 function Nav() {
   const { userData, city } = useSelector((state) => state.user);
   const { shopData } = useSelector((state) => state.owner);
   const [showInfo, setShowInfo] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
+  const {cartItems} = useSelector((state) => state.user)
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -58,7 +59,7 @@ function Nav() {
   }
 
   return (
-    <div className="w-full h-16 sm:h-20 lg:h-24 flex items-center justify-between md:justify-center gap-4 sm:gap-6 lg:gap-8 bg-sage-50 px-3 sm:px-6 md:px-8 lg:px-12 xl:px-16 fixed top-0 z-[9999] overflow-visible">
+    <div className="w-full h-16 sm:h-20 lg:h-24 flex items-center justify-between md:justify-center gap-4 sm:gap-6 lg:gap-8 bg-sage-100 px-3 sm:px-6 md:px-8 lg:px-12 xl:px-16 fixed top-0 z-[9999] overflow-visible">
       {/* Mobile Search Bar */}
       {showSearch && userData.role === "user" && (
         <div className="w-[95%] sm:w-[90%] h-14 sm:h-16 bg-white shadow-xl rounded-lg flex items-center gap-3 sm:gap-5 fixed top-16 sm:top-20 left-[2.5%] sm:left-[5%] md:hidden z-50">
@@ -172,13 +173,13 @@ function Nav() {
         ) : userData.role === "user" ? (
           <>
             {/* Shopping Cart */}
-            <div className="relative cursor-pointer">
+            <div className="relative cursor-pointer" onClick={() => navigate("/cart")}>
               <IoCartOutline
                 size={20}
                 className="text-primary-600 sm:w-6 sm:h-6 lg:w-7 lg:h-7"
               />
               <span className="absolute -right-1 sm:-right-2 -top-2 sm:-top-3 text-xs font-bold text-white rounded-full bg-primary-600 px-1 sm:px-[6px] min-w-[16px] sm:min-w-[18px] text-center">
-                0
+                {cartItems.length}
               </span>
             </div>
 

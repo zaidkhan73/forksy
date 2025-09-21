@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { FaPen } from "react-icons/fa";
 import { GiShop } from "react-icons/gi";
 import OwnerItemCard from "./OwnerItemCard.jsx";
-
+import { FaClock } from "react-icons/fa";
 
 
 function OwnerDashboard() {
@@ -46,7 +46,7 @@ function OwnerDashboard() {
         </div>
       )}
       {shopData && (
-        <div className="w-full flex flex-col items-center gap-6 px-4 sm:px-6">
+       <div className="w-full flex flex-col items-center gap-6 px-4 sm:px-6">
           <h1 className="text-2xl sm:text-3xl text-gray-900 flex items-center gap-3 mt-8 text-center">
             <FaUtensils
               className="text-primary-600 w-14 h-14"
@@ -59,11 +59,53 @@ function OwnerDashboard() {
             </div>
             <img src={shopData.image} alt={shopData.name} className="w-full h-48 sm:h-64 object-cover" />
             <div className="p-4 sm:p-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">{shopData.name}</h1>
-            <p className="text-gray-500  ">{shopData.city},{shopData.state}</p>
-            <p className="text-gray-500 mb-4 ">{shopData.address}</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">{shopData.name}</h1>
+              <p className="text-gray-500">{shopData.city},{shopData.state}</p>
+              <p className="text-gray-500 mb-4">{shopData.address}</p>
+              
+              {/* Opening and Closing Time Section */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <FaClock className="text-primary-600 w-4 h-4" />
+                    <span className="text-sm font-medium text-gray-700">Opens:</span>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {shopData.openingTime ? 
+                        new Date(`1970-01-01T${shopData.openingTime}`).toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true
+                        }) : '9:00 AM'
+                      }
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FaClock className="text-primary-600 w-4 h-4" />
+                    <span className="text-sm font-medium text-gray-700">Closes:</span>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {shopData.closingTime ? 
+                        new Date(`1970-01-01T${shopData.closingTime}`).toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true
+                        }) : '9:00 PM'
+                      }
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Status Badge */}
+                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  shopData.isOpen !== false ? 
+                  'bg-green-100 text-green-800' : 
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {shopData.isOpen !== false ? '● Open' : '● Closed'}
+                </div>
+              </div>
+            </div>
           </div>
-          </div>
+          
           {shopData.items.length === 0 && 
           <div className="flex justify-center items-center p-4 sm:p-6">
           <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-6 border border-gray-100 hover:shadow-xl transition-shadow duration-300">

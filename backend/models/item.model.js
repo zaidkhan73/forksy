@@ -43,6 +43,16 @@ const itemSchema = mongoose.Schema({
             "Nonveg"
         ],
         required:true
+    },
+    rating:{
+        average:{
+            type:Number,
+            default:0
+        },
+        Count:{
+            type:Number,
+            default:0
+        }
     }
 },{timestamps:true})
 
