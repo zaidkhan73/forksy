@@ -43,16 +43,23 @@ function SignIn() {
       // navigate("/"); // Optional, useEffect ke saath kaam ho jaayega
 
     } catch (error) {
-      console.log("error: ", error);
+  console.log("error: ", error);
 
-      if (error.response?.data) {
-        setErrorMessage(error.response.data.message);
-      } else if (error.request) {
-        setErrorMessage("Network error. Please check your connection.");
-      } else {
-        setErrorMessage("Something went wrong. Please try again.");
-      }
-    } finally {
+  if (error.response) {
+    // Backend ka status code
+    if (error.response.status === 400) {
+      // Agar backend sirf HTML bhej raha hai
+      setErrorMessage("Invalid Email or password");
+    } else if (error.response.data?.message) {
+      setErrorMessage(error.response.data.message);
+    } else {
+      setErrorMessage("Something went wrong. Please try again.");
+    }
+  } else {
+    setErrorMessage("Network error. Please check your connection.");
+  }
+}
+ finally {
       setIsLoading(false);
     }
   };
@@ -65,7 +72,7 @@ function SignIn() {
           Sign In to your account to get started
         </p>
 
-        T
+        
         {/* Error Message */}
         {errorMessage && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
