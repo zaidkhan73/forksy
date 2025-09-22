@@ -27,7 +27,7 @@ const placeOrder = async(req,res)=>{
             }
             groupItemsByShop[item.shop].push(item)
         })  
-    
+        const shopOrders = []
     } catch (error) {
          return res.status(500).json({
       message: "Error while placing the order",
