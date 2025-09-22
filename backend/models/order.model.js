@@ -39,14 +39,14 @@ const orderSchema =new mongoose.Schema({
     },
     paymentMethod:{
         type:String,
-        required:true,
-        enum:['cod','online']
+        enum:['cod','online'],
+        required:true
     },
     deliveryAddress:{
-        type:String,
-        required:true,
+        text:String,
         latitude:Number,
-        longitude:Number
+        longitude:Number,
+        required:true,
     },
     totalAmount:{
         type:Number,
