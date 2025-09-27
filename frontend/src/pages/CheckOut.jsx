@@ -17,6 +17,8 @@ import { setLocation, setMapAddress } from "../../redux/mapSlice";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { serverUrl } from "../App";
+import { useNavigate } from "react-router-dom";
+import { addMyOrders } from "../../redux/userSlice";
 
 function RecenterMap({location}){
   if(location.lat && location.lon){
@@ -36,8 +38,7 @@ const apikey = import.meta.env.VITE_GEOAPIKEY
   const { mapAddress } = useSelector((state) => state.map);
   const { location } = useSelector((state) => state.map);
   const dispatch = useDispatch()
-  console.log(mapAddress);
-  console.log("Map location:", location);
+  const navigate = useNavigate()
 
   
   
@@ -86,7 +87,7 @@ const apikey = import.meta.env.VITE_GEOAPIKEY
       color: "green",
     },
     {
-      id: "upi",
+      id: "online",
       name: "UPI / Credit / Debit Card",
       description: "Secure online payment",
       icon: <CreditCard className="w-5 h-5" />,
@@ -148,6 +149,7 @@ setIsLocationLoading(false)
     const address = res?.data?.results[0]?.formatted
     dispatch(setMapAddress(address))
     console.log(res)
+    navigate("/order-placed")
   } catch (error) {
     console.log(error);
   } finally {
@@ -171,14 +173,36 @@ const getLatLngByAddress = async () => {
 const handlePlaceOrder = async () => {
   try {
     setIsLoading(true);
-    const res = axios.post(`${serverUrl}/api/order/place-order`,{withCredentials:true})
-    console.log(res)
+
+    // yaha deliveryAddress object banaya
+    const deliveryAddress = {
+      text: mapAddress,
+      latitude: location.lat,
+      longitude: location.lon,
+    };
+
+    const res = await axios.post(
+      `${serverUrl}/api/order/place-order`,
+      {
+        cartItems,
+        paymentMethod: selectedPayment,
+        deliveryAddress,   // 👈 ab object ke roop me jayega
+        totalAmount: total,
+      },
+      { withCredentials: true }
+    );
+
+    console.log("Order placed:", res.data);
+    dispatch(addMyOrders(res.data))
+    
   } catch (error) {
-    console.log(error)
-  } finally{
-    setIsLoading(false)
+    console.log("Error placing order:", error);
+  } finally {
+    setIsLoading(false);
+    navigate("/order-placed")
   }
-}
+};
+
 
 useEffect(()=>{
   setAddressInput(mapAddress)

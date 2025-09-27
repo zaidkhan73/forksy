@@ -1,82 +1,131 @@
-import { ShopOrderItem } from "../models/order.model.js"
-import { Shop } from "../models/shop.model.js"
+import { Order, ShopOrderItem } from "../models/order.model.js";
+import { Shop } from "../models/shop.model.js";
+import { User } from "../models/user.model.js";
 
-const placeOrder = async(req,res)=>{
-    try {
-        const {cartItems, paymentMethod, deliveryAddress, totalAmount} = req.body
-        if(cartItems.length === 0 || !cartItems){
-            return res.status(400).json({
-                message:"Cart is empty"
-            })
+const placeOrder = async (req, res) => {
+  try {
+    const { cartItems, paymentMethod, deliveryAddress, totalAmount } = req.body;
+    if (cartItems.length === 0 || !cartItems) {
+      return res.status(400).json({
+        message: "Cart is empty",
+      });
+    }
+    if (
+      !deliveryAddress.text ||
+      !deliveryAddress.latitude ||
+      !deliveryAddress.longitude
+    ) {
+      return res.status(400).json({
+        message: "Delivery address is required",
+      });
+    }
+    if (!paymentMethod) {
+      return res.status(400).json({
+        message: "Payment method is required",
+      });
+    }
+
+    const groupItemsByShop = {};
+
+    cartItems.forEach((item) => {
+      //groupItemsByShop = {
+      const shopId = item.shop; //        shop1:[ item1, item2 ],
+      if (!groupItemsByShop[shopId]) {
+        //        shop2:[ item1, item2 ]
+        groupItemsByShop[shopId] = []; //}
+      }
+      groupItemsByShop[shopId].push(item);
+    });
+
+    const shopOrders = await Promise.all(
+      Object.keys(groupItemsByShop).map(async (shopId) => {
+        const shop = await Shop.findById(shopId).populate("owner");
+        if (!shop) {
+          return res.status(400).json({
+            message: "Shop not found",
+          });
         }
-        if(!deliveryAddress.text || !deliveryAddress.latitude || !deliveryAddress.longitude){
-            return res.status(400).json({
-                message:"Delivery address is required"
-            })
-        }
-        if(!paymentMethod){
-            return res.status(400).json({
-                message:"Payment method is required"
-            })
-        }
+        const items = groupItemsByShop[shopId];
 
-        const groupItemsByShop = {
-        }
+        const subtotal = items.reduce((sum, item) => {
+          return sum + Number(item.price) * Number(item.quantity);
+        }, 0);
 
-        cartItems.forEach(item=>{                         //groupItemsByShop = {
-            const shopId = item.shop                      //        shop1:[ item1, item2 ],
-            if(!groupItemsByShop[shopId]){                //        shop2:[ item1, item2 ]
-                groupItemsByShop[shopId] = []             //}
-            }
-        groupItemsByShop[shopId].push(item)
-        })  
+        return {
+          shop: shop._id,
+          owner: shop.owner._id,
+          subtotal,
+          shopOrderItem: items.map((item) => ({
+            item: item.id,
+            quantity: item.quantity,
+            price: item.price,
+            name: item.name,
+          })),
+        };
+      })
+    );
 
-        const shopOrders = await Promise.all(Object.keys(groupItemsByShop).map(async(shopId)=>{
-            const shop = await Shop.findById(shopId).populate("owner")
-            if(!shop){
-                return res.status(400).json({
-                    message:"Shop not found"
-                })
-            }
-            const items = groupItemsByShop[shopId]
+    const newOrder = await Order.create({
+      user: req.userId,
+      paymentMethod,
+      deliveryAddress,
+      totalAmount,
+      shopOrders,
+    });
 
-            const subtotal = items.reduce((sum,item)=>{
-                return sum + Number(item.price) * Number(item.quantity)
-            },0)
+    await newOrder.populate("shopOrders.shopOrderItems.item","name price")
+    await newOrder.populate("shopOrders.shop","name image")
+    await newOrder.populate("shopOrders.owner","name email mobile")
+    await newOrder.populate("user")
 
-            return  {
-                shop:shop._id,
-                owner:shop.owner._id,
-                subtotal,
-                ShopOrderItem:items.map((item)=>({
-                    item:item._id,
-                    quantity:item.quantity,
-                    price:item.price,
-                    name:item.name,
-                }))
-            }
-            
-        }))
 
-        const newOrder = await Order.create({
-            user:req.userId,
-            paymentMethod,
-            deliveryAddress,
-            totalAmount,
-            shopOrders,
-        })
-
-        return res.status(201).json(newOrder)
-        
-
-    
-    } catch (error) {
-         return res.status(500).json({
+    return res.status(201).json(newOrder);
+  } catch (error) {
+    return res.status(500).json({
       message: "Error while placing the order",
       error: error.message,
     });
+  }
+};
+
+const getOrders = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (user.role === "user") {
+      const orders = await Order.find({ user: req.userId })
+        .sort({ createdAt: -1 })
+        .populate("shopOrders.shop", "name image")
+        .populate("shopOrders.owner", "name email mobile")
+        .populate("shopOrders.shopOrderItem.item", "name price ");
+
+      return res.status(200).json(orders);
+    } else if (user.role === "owner") {
+      const orders = await Order.find({ "shopOrders.owner": req.userId })
+        .sort({ createdAt: -1 })
+        .populate("shopOrders.shop", "name image")
+        .populate("user")
+        .populate("shopOrders.shopOrderItem.item", "name price");
+
+      const filteredOrder = orders.map((order) => ({
+        _id: order._id,
+        user: order.user,
+        paymentMethod: order.paymentMethod,
+        deliveryAddress: order.deliveryAddress,
+        totalAmount: order.totalAmount,
+        shopOrders: order.shopOrders.filter(
+          (o) => o.owner._id.toString() === req.userId.toString()
+        ), // 👈 yeh filter karega
+        createdAt: order.createdAt,
+      }));
+
+      return res.status(200).json(filteredOrder);
     }
-}
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error while getting orders",
+      error: error.message,
+    });
+  }
+};
 
-
-export {placeOrder}
+export { placeOrder, getOrders };

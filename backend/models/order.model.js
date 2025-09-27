@@ -30,7 +30,12 @@ const shopOrderSchema =new mongoose.Schema({
         type:Number,
         required:true
     },
-    shopOrderItems:[shopOrderItemSchema]
+    shopOrderItem:[shopOrderItemSchema],
+    status:{
+        type:String,
+        enum: ["pending", "preparing", "out for delivery", "delivered", "cancelled",],
+        default:"pending"
+    }
 },{timestamps:true})
 
 const orderSchema =new mongoose.Schema({

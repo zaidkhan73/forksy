@@ -15,7 +15,7 @@ import { TbReceipt } from "react-icons/tb";
 
 
 function Nav() {
-  const { userData, city } = useSelector((state) => state.user);
+  const { userData, city, myOrders } = useSelector((state) => state.user);
   const { shopData } = useSelector((state) => state.owner);
   const [showInfo, setShowInfo] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -160,13 +160,13 @@ function Nav() {
             )}
 
             {/* My Orders */}
-            <div className="flex items-center gap-1 sm:gap-2 cursor-pointer relative px-2 sm:px-3 py-1 sm:py-2 rounded-lg bg-primary-100 text-primary-600 font-medium">
+            <div className="flex items-center gap-1 sm:gap-2 cursor-pointer relative px-2 sm:px-3 py-1 sm:py-2 rounded-lg bg-primary-100 text-primary-600 font-medium" onClick={()=>navigate("/my-orders")}> 
               <TbReceipt size={20} />
               <span className="hidden sm:block text-sm lg:text-base">
                 My Orders
               </span>
               <span className="absolute -right-1 sm:-right-2 -top-1 sm:-top-2 text-xs font-bold text-white rounded-full bg-primary-600 px-1 sm:px-[6px] py-0 sm:py-[1px] min-w-[16px] sm:min-w-[20px] text-center">
-                0
+                {myOrders.length}
               </span>
             </div>
           </>
@@ -184,7 +184,7 @@ function Nav() {
             </div>
 
             {/* My Orders Button - Desktop */}
-            <button className="hidden md:block px-2 lg:px-3 py-1 lg:py-2 rounded-lg bg-primary-100 text-primary-600 text-sm lg:text-base font-medium">
+            <button className="hidden md:block px-2 lg:px-3 py-1 lg:py-2 rounded-lg bg-primary-100 text-primary-600 text-sm lg:text-base font-medium" onClick={() => navigate("/my-orders")}>
               My Orders
             </button>
           </>
@@ -208,7 +208,7 @@ function Nav() {
 
               {/* Mobile My Orders */}
               {userData.role === "user" && (
-                <div className="md:hidden text-primary-600 font-semibold cursor-pointer hover:bg-primary-50 py-2 rounded-lg px-2 transition-all text-sm sm:text-base">
+                <div className="md:hidden text-primary-600 font-semibold cursor-pointer hover:bg-primary-50 py-2 rounded-lg px-2 transition-all text-sm sm:text-base" onClick={() => navigate("/my-orders")}>
                   My Orders
                 </div>
               )}

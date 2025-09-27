@@ -53,7 +53,7 @@ function FoodCard({ data }) {
        name:name,
        price:price,
        image:image,
-       shop:shop.name,
+       shop:shop._id,
        quantity:quantity,
        food_type:foodType
     }))
