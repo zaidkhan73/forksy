@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setLocation, setMapAddress } from "../../redux/mapSlice";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { serverUrl } from "../App";
 
 function RecenterMap({location}){
   if(location.lat && location.lon){
@@ -93,16 +94,7 @@ const apikey = import.meta.env.VITE_GEOAPIKEY
     },
   ];
 
-  const handlePlaceOrder = async () => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Navigate to order confirmation or success page
-      alert("Order placed successfully!");
-    }, 2000);
-  };
-
+  
 
   //   const handleCurrentLocation = () => {
   //     setIsLocationLoading(true);
@@ -174,6 +166,18 @@ const getLatLngByAddress = async () => {
    } catch (error) {
     console.log(error)
    }
+}
+
+const handlePlaceOrder = async () => {
+  try {
+    setIsLoading(true);
+    const res = axios.post(`${serverUrl}/api/order/place-order`,{withCredentials:true})
+    console.log(res)
+  } catch (error) {
+    console.log(error)
+  } finally{
+    setIsLoading(false)
+  }
 }
 
 useEffect(()=>{

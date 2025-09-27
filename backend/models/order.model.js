@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
 
 const shopOrderItemSchema = new mongoose.Schema({
-    item:mongoose.Schema.Types.ObjectId,
-    ref:"Item",
+    item:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Item"}
+    ,
     quantity:{
         type:Number,
         required:true
@@ -28,7 +30,7 @@ const shopOrderSchema =new mongoose.Schema({
         type:Number,
         required:true
     },
-    shopOrderItems:[shopOrderItemsSchema]
+    shopOrderItems:[shopOrderItemSchema]
 },{timestamps:true})
 
 const orderSchema =new mongoose.Schema({
@@ -46,13 +48,12 @@ const orderSchema =new mongoose.Schema({
         text:String,
         latitude:Number,
         longitude:Number,
-        required:true,
     },
     totalAmount:{
         type:Number,
         required:true
     },
-    shopOrder:[shopOrderSchema]
+    shopOrders:[shopOrderSchema]
 
 },{timestamps:true})
 

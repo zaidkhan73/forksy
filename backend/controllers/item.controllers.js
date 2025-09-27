@@ -165,7 +165,8 @@ const getItemByCity = async (req, res) => {
     console.log("shop ids: ",shopIds)
     const items = await Item.find({
       shop:{$in:shopIds}
-    }).populate("shop", "name city")
+    }).populate("shop", "name city isOpen openingTime closingTime")
+    
     if(!items){
       return res.status(404).json({message:"No items found"})
     }
