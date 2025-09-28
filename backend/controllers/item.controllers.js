@@ -162,7 +162,7 @@ const getItemByCity = async (req, res) => {
           return res.status(404).json({message:"No shops found"})
     }
     const shopIds = shops.map(shop=>shop._id)
-    console.log("shop ids: ",shopIds)
+    
     const items = await Item.find({
       shop:{$in:shopIds}
     }).populate("shop", "name city isOpen openingTime closingTime")

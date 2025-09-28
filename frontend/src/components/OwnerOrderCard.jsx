@@ -1,24 +1,66 @@
-import React, { useState } from "react";
-import { Clock, MapPin, Mail, Phone, User, ShoppingBag } from "lucide-react";
+
+import { Clock, MapPin, Mail, Phone, User, ShoppingBag, CheckCircle, AlertCircle, Truck, ChefHat } from "lucide-react";
+import axios from "axios";
+import { serverUrl } from "../App";
+import { setOrderStatus } from "../../redux/userSlice";
+import {  useDispatch } from "react-redux";
 
 function OwnerOrderCard({ order }) {
+    
+    const dispatch = useDispatch()
+ 
   if (!order || !order.shopOrders || order.shopOrders.length === 0) {
-    return <div>No order data available</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">📦</div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">No order data available</h3>
+          <p className="text-gray-500">Please check back later for new orders.</p>
+        </div>
+      </div>
+    );
   }
 
-  const [status, setStatus] = useState(order.shopOrders[0].status || "pending");
+ 
 
-  const handleStatusChange = (e) => {
-    const newStatus = e.target.value;
-    setStatus(newStatus);
-    // TODO: Call backend API to update status in DB
-    console.log("Updated status to:", newStatus);
+  const handleStatusChange = async(orderId,shopId,status) => {
+    // const newStatus = e.target.value;
+    // setStatus(newStatus);
+    // console.log("Updated status to:", newStatus);
+    try {
+        const res = await axios.post(`${serverUrl}/api/order/set-status/${orderId}/${shopId}`,{status},{withCredentials:true}) 
+        console.log(res.data)
+    dispatch(setOrderStatus({ orderId, shopId, status }));
+
+    } catch (error) {
+        console.log(error)
+    }
+  };
+
+  const getStatusConfig = (status) => {
+    const configs = {
+      pending: {
+        color: 'bg-amber-100 text-amber-800 border-amber-200',
+        icon: AlertCircle,
+        bgColor: 'bg-amber-50'
+      },
+      preparing: {
+        color: 'bg-blue-100 text-blue-800 border-blue-200',
+        icon: ChefHat,
+        bgColor: 'bg-blue-50'
+      },
+      'out for delivery': {
+        color: 'bg-purple-100 text-purple-800 border-purple-200',
+        icon: Truck,
+        bgColor: 'bg-purple-50'
+      },
+    };
+    return configs[status] || configs.pending;
   };
 
   const formatDate = (dateString) => {
     try {
       return new Date(dateString).toLocaleDateString("en-IN", {
-        year: "numeric",
         month: "short",
         day: "numeric",
         hour: "2-digit",
@@ -29,129 +71,137 @@ function OwnerOrderCard({ order }) {
     }
   };
 
+  const statusConfig = getStatusConfig(order.shopOrders[0].status);
+  const StatusIcon = statusConfig.icon;
+
   return (
-    <div className=" bg-gradient-to-br from-orange-50 to-red-50 p-4">
-      <div className="max-w-3xl mx-auto space-y-4">
-        {/* Header */}
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-800 mb-1">
-            Customer Orders
-          </h1>
-          <p className="text-gray-600 text-sm">
-            Manage and track customer orders from your shop
-          </p>
+    <div className=" bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Compact Header */}
+        <div className="mb-6 flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+            <ShoppingBag className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              Customer Orders
+            </h1>
+          </div>
         </div>
 
-        {/* Orders */}
-        {order.shopOrders.map((shopOrder, idx) => (
-          <div
-            key={shopOrder._id || idx}
-            className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200"
-          >
-            {/* Order Header */}
-            <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
-              <div>
-                <h3 className="text-base font-semibold text-gray-800">
-                  Order #{order._id.slice(-8)}
-                </h3>
-                <div className="flex flex-wrap gap-3 text-xs text-gray-500 mt-1">
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    {formatDate(order.createdAt)}
-                  </div>
-                  <div className="flex items-center gap-1 max-w-xs">
-                    <MapPin className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate">
-                      {order.deliveryAddress.text}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Status Dropdown */}
-              <div className="flex flex-col items-start md:items-end">
-                <label className="text-xs text-gray-500 mb-1">
-                  Order Status
-                </label>
-                <select
-                  value={status}
-                  onChange={handleStatusChange}
-                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-orange-400 focus:outline-none bg-gray-50"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="preparing">Preparing</option>
-                  <option value="out-for-delivery">Out for Delivery</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Customer Info */}
-            <div className="p-4">
-              <div className="mb-3">
-                <h4 className="font-semibold text-gray-800 text-sm mb-2">
-                  Customer Details
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <User className="h-3.5 w-3.5 text-gray-500" />
-                    <span>{order.user.fullName}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-3.5 w-3.5 text-gray-500" />
-                    <span className="truncate">{order.user.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-3.5 w-3.5 text-gray-500" />
-                    <span>{order.user.mobile}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Order Items */}
-              <div className="bg-gray-50 rounded-lg p-3 mb-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <ShoppingBag className="h-3.5 w-3.5 text-gray-600" />
-                  <span className="font-medium text-gray-700 text-sm">
-                    Order Items
-                  </span>
-                </div>
-                <div className="space-y-1.5 text-sm">
-                  {shopOrder.shopOrderItem.map((orderItem, itemIndex) => (
-                    <div
-                      key={itemIndex}
-                      className="flex justify-between items-center"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-0.5 rounded">
-                          {orderItem.quantity}x
-                        </span>
-                        <span className="text-gray-700">
-                          {orderItem.item?.name || "Item"}
-                        </span>
-                      </div>
-                      <span className="font-medium text-gray-800">
-                        ₹{orderItem.price * orderItem.quantity}
-                      </span>
+        {/* Compact Orders */}
+        <div className="space-y-4">
+          {order.shopOrders.map((shopOrder, idx) => (
+            <div
+              key={shopOrder._id || idx}
+              className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 overflow-hidden hover:shadow-xl transition-all duration-300"
+            >
+              {/* Horizontal Layout */}
+              <div className="flex flex-col lg:flex-row">
+                {/* Left Section - Order Info */}
+                <div className="lg:w-1/3 p-4 bg-gradient-to-r from-gray-50 to-gray-100/50 border-b lg:border-b-0 lg:border-r border-gray-200/50">
+                  <div className="flex items-center gap-3 mb-3">
+                    <h3 className="text-lg font-bold text-gray-800">
+                      #{order._id.slice(-6)}
+                    </h3>
+                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border ${statusConfig.color}`}>
+                      <StatusIcon className="h-3 w-3" />
+                      {shopOrder.status}
                     </div>
-                  ))}
+                  </div>
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-gray-500" />
+                      <span className="text-gray-600">{formatDate(order.createdAt)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-gray-500" />
+                      <span className="text-gray-600">{order.user?.fullName || 'Customer'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-gray-500" />
+                      <span className="text-gray-600">{order.user?.mobile || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
+                      <span className="text-gray-600 text-xs line-clamp-2">{order.deliveryAddress.text}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="border-t border-gray-200 pt-2 mt-2 text-xs text-gray-600 flex justify-between">
-                  <span>Subtotal</span>
-                  <span>₹{shopOrder.subtotal}</span>
+
+                {/* Middle Section - Order Items */}
+                <div className="lg:w-2/5 p-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <ShoppingBag className="h-4 w-4" />
+                    Order Items ({shopOrder.shopOrderItem.length})
+                  </h4>
+                  
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {shopOrder.shopOrderItem.map((orderItem, itemIndex) => (
+                      <div
+                        key={itemIndex}
+                        className="flex justify-between items-center p-2 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-6 h-6 bg-orange-500 rounded-md flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                            {orderItem.quantity}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-medium text-sm text-gray-800 truncate">
+                              {orderItem.item?.name || "Item"}
+                            </div>
+                            <div className="text-xs text-gray-500">₹{orderItem.price} each</div>
+                          </div>
+                        </div>
+                        <div className="text-sm font-semibold text-gray-800 flex-shrink-0">
+                          ₹{orderItem.price * orderItem.quantity}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-3 pt-2 border-t border-gray-200">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">Subtotal:</span>
+                      <span className="text-lg font-bold text-gray-800">₹{shopOrder.subtotal}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Section - Status & Total */}
+                <div className="lg:w-1/4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-t lg:border-t-0 lg:border-l border-gray-200/50">
+                  <div className="space-y-4">
+                    {/* Status Update */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-2">
+                        Update Status
+                      </label>
+                      <select
+                        
+                        onChange={(e)=>{handleStatusChange(order._id,shopOrder.shop._id,e.target.value)}}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+                      >
+                        <option value="">Change</option>
+                        <option value="pending">⏳ Pending</option>
+                        <option value="preparing">👨‍🍳 Preparing</option>
+                        <option value="out for delivery">🚚 Out for Delivery</option>
+                      </select>
+                    </div>
+
+                    {/* Total Amount */}
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-3 text-white text-center">
+                      <div className="text-xs text-green-100 mb-1">Total Amount</div>
+                      <div className="text-2xl font-bold">₹{order.totalAmount}</div>
+                      <div className="text-xs text-green-100 mt-1">
+                        {order.paymentMethod?.toUpperCase() || 'COD'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              {/* Total Amount */}
             </div>
-          </div>
-        ))}
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-700">
-            Total Amount:
-          </span>
-          <span className="text-lg font-bold text-gray-900">
-            ₹{order.totalAmount}
-          </span>
+          ))}
         </div>
       </div>
     </div>

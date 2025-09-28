@@ -73,11 +73,10 @@ const placeOrder = async (req, res) => {
       shopOrders,
     });
 
-    await newOrder.populate("shopOrders.shopOrderItems.item","name price")
-    await newOrder.populate("shopOrders.shop","name image")
-    await newOrder.populate("shopOrders.owner","name email mobile")
-    await newOrder.populate("user")
-
+    await newOrder.populate("shopOrders.shopOrderItems.item", "name price");
+    await newOrder.populate("shopOrders.shop", "name image");
+    await newOrder.populate("shopOrders.owner", "name email mobile");
+    await newOrder.populate("user");
 
     return res.status(201).json(newOrder);
   } catch (error) {
@@ -128,4 +127,37 @@ const getOrders = async (req, res) => {
   }
 };
 
-export { placeOrder, getOrders };
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { orderId, shopId } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findById(orderId);
+
+    const shopOrder = order.shopOrders.find(
+      (o) => o.shop.toString() === shopId.toString()
+    );
+
+    if (!shopOrder) {
+      return res.status(400).json({
+        message: "Shop order not found",
+      });
+    }
+
+    // update status
+    shopOrder.status = status;
+    await shopOrder.save();
+    await order.save();
+
+
+    return res.status(200).json(shopOrder.status);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error while updating order status",
+      error: error.message,
+    });
+  }
+};
+
+
+export { placeOrder, getOrders, updateOrderStatus };
