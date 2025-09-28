@@ -18,12 +18,14 @@ import CheckOut from './pages/CheckOut'
 import OrderPlaced from './pages/OrderPlaced'
 import MyOrders from './pages/MyOrders'
 import useGetMyOrders from '../hooks/useGetMyOrders'
+import useUpdateLocation from '../hooks/useUpdateLocation'
 
 export const serverUrl = 'http://localhost:8000'
 
 function App() {
   const {userData} = useSelector(state=>state.user)
   useGetMyOrders()
+  useUpdateLocation()
   useGetCurrentUser()
   useGetItemByCity()
   useGetCity()

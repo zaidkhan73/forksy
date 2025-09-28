@@ -188,7 +188,11 @@ function Nav() {
               My Orders
             </button>
           </>
-        ) : null}
+        ) : userData.role === "deliveryBoy" && (
+          <button className="hidden md:block px-3 lg:px-4 py-2 lg:py-3 rounded-lg bg-primary-100 text-primary-600 text-sm lg:text-base font-medium" onClick={() => navigate("/my-orders")}>
+              My Orders
+            </button>
+        )}
 
         {/* User Profile */}
         <div className="relative">
@@ -208,6 +212,12 @@ function Nav() {
 
               {/* Mobile My Orders */}
               {userData.role === "user" && (
+                <div className="md:hidden text-primary-600 font-semibold cursor-pointer hover:bg-primary-50 py-2 rounded-lg px-2 transition-all text-sm sm:text-base" onClick={() => navigate("/my-orders")}>
+                  My Orders
+                </div>
+              )}
+
+              {userData.role === "deliveryBoy" && (
                 <div className="md:hidden text-primary-600 font-semibold cursor-pointer hover:bg-primary-50 py-2 rounded-lg px-2 transition-all text-sm sm:text-base" onClick={() => navigate("/my-orders")}>
                   My Orders
                 </div>

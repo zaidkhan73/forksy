@@ -4,10 +4,12 @@ import axios from "axios";
 import { serverUrl } from "../App";
 import { setOrderStatus } from "../../redux/userSlice";
 import {  useDispatch } from "react-redux";
+import { useState } from "react";
 
 function OwnerOrderCard({ order }) {
     
     const dispatch = useDispatch()
+    const [availableBoys, setAvailableBoys] = useState([])
  
   if (!order || !order.shopOrders || order.shopOrders.length === 0) {
     return (
@@ -31,6 +33,7 @@ function OwnerOrderCard({ order }) {
         const res = await axios.post(`${serverUrl}/api/order/set-status/${orderId}/${shopId}`,{status},{withCredentials:true}) 
         console.log(res.data)
     dispatch(setOrderStatus({ orderId, shopId, status }));
+    setAvailableBoys(res.data.availableBoys)
 
     } catch (error) {
         console.log(error)
@@ -197,10 +200,26 @@ function OwnerOrderCard({ order }) {
                         {order.paymentMethod?.toUpperCase() || 'COD'}
                       </div>
                     </div>
+                    
                   </div>
+                  
                 </div>
+                
               </div>
+              <div className="p-2">
+                        {shopOrder.status === 'out for delivery' && 
+                        <div className="p-2 rounded-lg text-sm bg-primary-50">
+                            {availableBoys.length>0 ?(
+                                availableBoys.map((b,index)=>(
+                                    <div key={index} className="text-gray-800">{b.fullName}-{b.mobile}</div>
+                                ))
+                            ):(
+                                <div>waiting for delivery boy to accept</div>
+                            )}
+                        </div>}
+                    </div>
             </div>
+            
           ))}
         </div>
       </div>

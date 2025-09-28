@@ -17,7 +17,7 @@ function useGetMyOrders() {
         try {
           const res = await axios.get(`${serverUrl}/api/order/get-order`, {withCredentials: true})
           dispatch(setMyOrders(res.data))
-          console.log("ooooooooooooo",res.data)
+          console.log("My orders: ",res.data)
         } catch (error) {
           console.log('Failed to fetch current user:', error)
           // If the request fails (e.g., user is not authenticated), 

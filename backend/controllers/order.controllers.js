@@ -1,4 +1,5 @@
-import { Order, ShopOrderItem } from "../models/order.model.js";
+import { DeliveryAssignment } from "../models/deliveryAssignment.js";
+import { Order } from "../models/order.model.js";
 import { Shop } from "../models/shop.model.js";
 import { User } from "../models/user.model.js";
 
@@ -146,11 +147,101 @@ const updateOrderStatus = async (req, res) => {
 
     // update status
     shopOrder.status = status;
+
+    let deliveryBoyPayload = [];
+
+    if (status === "out for delivery" && !shopOrder.assignment) {
+      const { longitude, latitude } = order.deliveryAddress;
+      const nearByDeliveryBoys = await User.find({
+        role: "deliveryBoy",
+        location: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [Number(longitude), Number(latitude)],
+            },
+            $maxDistance: 5000,
+          },
+        },
+      });
+
+      const nearByIds = nearByDeliveryBoys.map((d) => d._id);
+      const busyIds = await DeliveryAssignment.find({
+        assignedTo: {
+          $in: nearByIds,
+        },
+        status: {
+          $nin: ["broadcasted", "completed"],
+        },
+      }).distinct("assignedTo");
+
+      const busyIdSet = new Set(busyIds);
+
+      const availableBoys = nearByDeliveryBoys.filter(
+        (d) => !busyIdSet.has(String(d._id))
+      );
+      const candidates = availableBoys.map((n) => n._id);
+
+      if (candidates.length === 0) {
+        await shopOrder.save();
+        await order.save();
+        return res.status(400).json({
+          message: "order status updated but no deliveryBoy available",
+        });
+      }
+
+      let deliveryAssignment = await DeliveryAssignment.findOne({
+        shopOrderId: shopOrder._id,
+      });
+
+      if (!deliveryAssignment) {
+        deliveryAssignment = await DeliveryAssignment.create({
+          order: order._id,
+          shop: shopOrder.shop,
+          shopOrderId: shopOrder._id,
+          broadcastedTo: candidates,
+          status: "broadcasted",
+        });
+      }
+
+      //   const deliveryAssignment = await DeliveryAssignment.create({
+      //     order: order._id,
+      //     shop: shopOrder.shop,
+      //     shopOrderId: shopOrder._id,
+      //     broadcastedTo: candidates,
+      //     status: "broadcasted",
+      //   });
+
+      shopOrder.assignedDeliveryBoy = deliveryAssignment.assignedTo;
+
+      shopOrder.assignment = deliveryAssignment._id;
+
+      deliveryBoyPayload = availableBoys.map((b) => ({
+        id: b._id,
+        fullName: b.fullName,
+        mobile: b.mobile,
+        longitude: b.location.coordinates?.[0],
+        latitude: b.location.coordinates?.[1],
+      }));
+    }
+
+    const updatedShopOrder = order.shopOrders.find((o) => o.shop === shopId);
+
     await shopOrder.save();
     await order.save();
 
+    await order.populate("shopOrders.shop", "name image");
+    await order.populate(
+      "shopOrders.assignedDeliveryBoy",
+      "fullName email mobile"
+    );
 
-    return res.status(200).json(shopOrder.status);
+    return res.status(200).json({
+      shopOrder: updatedShopOrder,
+      assignedDeliveryBoy: updatedShopOrder?.assignedDeliveryBoy,
+      availableBoys: deliveryBoyPayload,
+      assignemnt: updatedShopOrder?.assignment._id,
+    });
   } catch (error) {
     return res.status(500).json({
       message: "Error while updating order status",
@@ -159,5 +250,37 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+const getAssignment = async (req, res) => {
+  try {
+    const deliveryBoyId = req.userId;
+    const assignment = await DeliveryAssignment.find({
+      broadcastedTo: deliveryBoyId,
+      status: "broadcasted"
+    }).populate("order shop");
 
-export { placeOrder, getOrders, updateOrderStatus };
+    const formatedData = assignment.map(a => {
+      const shopOrder = a.order.shopOrders.find(o =>
+        o._id.equals(a.shopOrderId)   
+      );
+
+      return {
+        assignmentId: a._id,
+        orderId: a.order._id,
+        shopName: a.shop.name,
+        deliveryAddress: a.order.deliveryAddress,
+        items: shopOrder?.shopOrderItem || [],
+        subtotal: shopOrder?.subtotal || 0
+      };
+    });
+
+    return res.status(200).json(formatedData);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error while getting assignment",
+      error: error.message,
+    });
+  }
+};
+
+
+export { placeOrder, getOrders, updateOrderStatus, getAssignment };
