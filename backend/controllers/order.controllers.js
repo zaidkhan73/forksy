@@ -104,7 +104,8 @@ const getOrders = async (req, res) => {
         .sort({ createdAt: -1 })
         .populate("shopOrders.shop", "name image")
         .populate("user")
-        .populate("shopOrders.shopOrderItem.item", "name price");
+        .populate("shopOrders.shopOrderItem.item", "name price")
+        .populate("shopOrders.assignedDeliveryBoy", "fullName mobile")
 
       const filteredOrder = orders.map((order) => ({
         _id: order._id,
@@ -282,5 +283,124 @@ const getAssignment = async (req, res) => {
   }
 };
 
+const acceptOrder = async (req, res) => {
+    try {
+        const {assignmentId} = req.params
+        const assignment = await DeliveryAssignment.findById(assignmentId)
+        if(!assignment){
+            return res.status(400).json({
+                message:"Assignment not found"
+            })
+        }
+        if(assignment.status !== "broadcasted"){
+            return res.status(400).json({
+                message:"Assignment is expired"
+            })
+        }
+        const alreadyAssigned = await DeliveryAssignment.findOne({
+            assignedTo:req.userId,
+            status:{
+                $nin:["broadcasted","completed"]
+            }
+        })
+        if(alreadyAssigned){
+            return res.status(400).json({
+                message:"You have already assigned an order"
+            })
+        }
 
-export { placeOrder, getOrders, updateOrderStatus, getAssignment };
+        assignment.assignedTo = req.userId
+        assignment.status = "assigned"
+        assignment.acceptedAt = new Date()
+        await assignment.save()
+
+        const order = await Order.findById(assignment.order)
+        if(!order){
+            return res.status(400).json({
+                message:"Order not found"
+            })
+        }
+        const shopOrder = order.shopOrders.find(o=>o._id.equals(assignment.shopOrderId))
+        shopOrder.assignedDeliveryBoy = req.userId
+
+        await order.save()
+        await order.populate("shopOrders.assignedDeliveryBoy")
+        return res.status(200).json({
+            message:"Order accepted",
+        })
+
+
+    } catch (error) {
+        return res.status(500).json({
+            message:"Error while accepting order",
+            error:error.message
+        })
+    }
+}
+
+const getAcceptedOrder = async (req, res) => {
+    try {
+        const assignment = await DeliveryAssignment.findOne({
+            assignedTo:req.userId,
+            status:"assigned"
+        }).populate("shop","name").populate("assignedTo","fullName email mobile location").populate({
+            path:"order",
+            populate:[{path:"user",select:"fullName email location mobile"}]
+        })
+
+        if(!assignment){
+            return res.status(400).json({
+                message:"No accepted order found"
+            })
+        }
+
+        if(!assignment.order){
+            return res.status(400).json({
+                message:"Order not found"
+            })
+        }
+
+         await assignment.order.populate("shopOrders.shop" , "name");
+
+        const shopOrder = assignment.order.shopOrders.find(o=>String(o._id)==String(assignment.shopOrderId))
+        //await shopOrder.populate("shop")
+
+        if(!shopOrder){
+            return res.status(400).json({
+                message:"Shop order not found"
+            })
+        }
+
+        let deliveryBoyLocation = {lat:null,lon:null}
+        if(assignment.assignedTo.location.coordinates.length === 2){
+            deliveryBoyLocation.lat = assignment.assignedTo.location.coordinates[1]
+            deliveryBoyLocation.lon = assignment.assignedTo.location.coordinates[0]
+        }
+        
+
+        let customerLocation = {lat:null,lon:null}
+        if(assignment.order.deliveryAddress){
+            customerLocation.lat = assignment.order.deliveryAddress.latitude
+        customerLocation.lon = assignment.order.deliveryAddress.longitude
+        }
+        
+
+
+        return res.status(200).json({
+            id:assignment._id,
+            user:assignment.order.user,
+            shopOrder:shopOrder,
+            deliveryAddress:assignment.order.deliveryAddress,
+            deliveryBoyLocation:deliveryBoyLocation,
+            customerLocation:customerLocation
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            message:"Error while getting accepted order",
+            error:error.message
+        })
+    }
+}
+
+export { placeOrder, getOrders, updateOrderStatus, getAssignment, acceptOrder, getAcceptedOrder };
