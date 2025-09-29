@@ -1,7 +1,9 @@
 
 import { Clock, MapPin, Star, ShoppingBag, Filter, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function UserOrderCard({ order }) {
+  const navigate = useNavigate()
 
   if (!order.shopOrders || order.shopOrders.length === 0) {
     return <div>No order data available</div>;
@@ -180,22 +182,11 @@ function UserOrderCard({ order }) {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3">
-              {/* Pending: Cancel + Track */}
-              {order.shopOrders[0].status === "pending" && (
-                <>
-                  <button className="flex-1 md:flex-auto bg-red-600 hover:bg-red-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors">
-                    Cancel Order
-                  </button>
-                  <button className="flex-1 md:flex-auto bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors">
-                    Track Order
-                  </button>
-                </>
-              )}
+              
 
-              {/* Preparing or Out-for-delivery: Track only */}
-              {(order.shopOrders[0].status === "preparing" ||
-                order.shopOrders[0].status === "out-for-delivery") && (
-                <button className="flex-1 md:flex-auto bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors">
+              
+              {(order.shopOrders[0].status !== "delivered" ) && (
+                <button className="flex-1 md:flex-auto bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-lg font-medium transition-colors" onClick={()=>navigate(`/track-order/${order._id}`)}> 
                   Track Order
                 </button>
               )}
@@ -208,9 +199,9 @@ function UserOrderCard({ order }) {
               )}
 
               {/* Always show View Details */}
-              <button className="flex-1 md:flex-auto px-6 py-2.5 border border-gray-300 bg-gray-50 hover:bg-gray-50 text-gray-700 rounded-lg font-medium transition-colors">
+              {/* <button className="flex-1 md:flex-auto px-6 py-2.5 border border-gray-300 bg-gray-50 hover:bg-gray-50 text-gray-700 rounded-lg font-medium transition-colors">
                 View Details
-              </button>
+              </button> */}
             </div>
           </div>{" "}
         </div>

@@ -403,4 +403,33 @@ const getAcceptedOrder = async (req, res) => {
     }
 }
 
-export { placeOrder, getOrders, updateOrderStatus, getAssignment, acceptOrder, getAcceptedOrder };
+const getOrderById = async(req,res) => {
+    try {
+        const {orderId} = req.params
+        const order = await Order.findById(orderId).populate("user").populate({
+            path:"shopOrders.shop",
+            model:"Shop"
+        }).populate({
+            path:"shopOrders.assignedDeliveryBoy",
+            model:"User"
+        }).populate({
+            path:"shopOrders.shopOrderItem.item",
+            model:"Item"
+        }).lean()
+        if(!order){
+            return res.status(400).json({
+                message:"Order not found"
+            })
+        }
+
+        return res.status(200).json(order)
+        
+    } catch (error) {
+        return res.status(500).json({
+            message:"Error while getting order by id",
+            error:error.message
+        })
+    }
+}
+
+export { placeOrder, getOrders, updateOrderStatus, getAssignment, acceptOrder, getAcceptedOrder, getOrderById };
